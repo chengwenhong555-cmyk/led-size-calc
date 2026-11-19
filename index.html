@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1F3864">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="尺寸計算">
+<title>LED電視牆尺寸計算</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root {
+    --navy: #1F3864; --navy2: #2c4a7c; --bg: #f1f4f8; --card: #fff; --border: #d7dde5;
+    --text: #1a1a1a; --muted: #6b7280; --accent: #2563eb; --danger: #dc2626; --good: #15803d;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; }
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", "Heiti TC", sans-serif;
+    background: var(--bg); color: var(--text); font-size: 16px;
+  }
+  header {
+    background: var(--navy); color: #fff; position: sticky; top: 0; z-index: 5;
+    padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  }
+  header h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: .5px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 14px 16px calc(env(safe-area-inset-bottom) + 28px); }
+
+  .target {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;
+  }
+  .target label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  .target input {
+    width: 100%; font-size: 22px; font-weight: 700; padding: 10px 12px; border: 1.5px solid var(--border);
+    border-radius: 10px; font-family: inherit; color: var(--navy);
+  }
+  .target input:focus, .card input:focus { outline: none; border-color: var(--accent); }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 12px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .card-head .name { font-size: 18px; font-weight: 800; color: var(--navy); }
+  .card-head .dim { font-size: 13px; color: var(--muted); margin-left: 6px; font-weight: 600; }
+  .link { background: none; border: none; color: var(--accent); font-size: 14px; font-weight: 700; padding: 4px 2px; cursor: pointer; font-family: inherit; }
+
+  .counts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .counts label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  .stepper { display: flex; align-items: stretch; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .stepper button {
+    width: 42px; border: none; background: #eef2f8; color: var(--navy); font-size: 22px; font-weight: 800; cursor: pointer;
+  }
+  .stepper button:active { background: #dbe3ef; }
+  .stepper input {
+    flex: 1; min-width: 0; border: none; text-align: center; font-size: 20px; font-weight: 800; padding: 8px 0;
+    font-family: inherit; -moz-appearance: textfield;
+  }
+  .stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .counts > div { min-width: 0; }
+  .manual { font-size: 12px; color: #b45309; font-weight: 700; margin: -4px 0 8px; display: flex; gap: 8px; align-items: center; }
+  .manual[hidden] { display: none; }
+
+  .res { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 15px; }
+  .res dt { color: var(--muted); font-weight: 700; }
+  .res dd { margin: 0; font-weight: 700; }
+  .res dd.big { font-size: 17px; color: var(--navy); }
+  .plus { color: var(--good); } .minus { color: var(--danger); }
+
+  .actions { display: flex; gap: 8px; margin-top: 12px; }
+  .btn {
+    flex: 1; font-family: inherit; font-size: 15px; font-weight: 700; padding: 10px; border-radius: 10px;
+    border: 1.5px solid var(--navy); background: var(--navy); color: #fff; cursor: pointer;
+  }
+  .btn.ghost { background: #fff; color: var(--navy); }
+  .btn.danger { background: #fff; color: var(--danger); border-color: var(--danger); }
+
+  .edit { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .edit .full { grid-column: 1 / -1; }
+  .edit label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  .edit input { width: 100%; font-size: 17px; padding: 9px 10px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; }
+
+  .add { margin-top: 12px; width: 100%; border-style: dashed; }
+  .note { margin-top: 18px; font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .note b { color: var(--text); }
+
+  #toast {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 24px); transform: translate(-50%, 16px);
+    background: #1f2937; color: #fff; padding: 10px 18px; border-radius: 10px; font-size: 15px; font-weight: 700;
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 20; max-width: 90vw;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+<header><h1>LED 電視牆尺寸計算</h1></header>
+<main>
+  <section class="target">
+    <div><label for="tw">目標寬 (cm)</label><input id="tw" type="number" inputmode="decimal"></div>
+    <div><label for="th">目標高 (cm)</label><input id="th" type="number" inputmode="decimal"></div>
+  </section>
+
+  <section class="cards" id="cards"></section>
+  <button class="btn ghost add" id="add">+ 新增模組</button>
+
+  <div class="note">
+    <b>使用方式</b>：填目標寬高，每個模組會自動算出最接近的塊數。寬(橫向塊數)、高(直向塊數)可以用 −／＋ 或直接輸入改成你要的數字，其他數字會跟著重算。<br>
+    <b>顯示比例</b>＝寬÷高，取小數三位（第四位起捨去），例如顯示尺寸 16:9 為 <b>1.777</b>。<br>
+    模組清單可自行新增／修改，資料只存在這支手機或這台電腦。
+    <button class="link" id="reset">恢復預設模組</button>
+  </div>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  const DEFAULT_MODULES = [
+    { id: 'm1', name: '模組A', widthMm: 600, heightMm: 337.5 },
+    { id: 'm2', name: '模組B', widthMm: 320, heightMm: 360 }
+  ];
+  const KEY = 'ledsize_v1';
+
+  function load() {
+    try {
+      const d = JSON.parse(localStorage.getItem(KEY));
+      if (d && Array.isArray(d.modules)) return d;
+    } catch (e) {}
+    return { target: { w: 288, h: 160 }, modules: JSON.parse(JSON.stringify(DEFAULT_MODULES)) };
+  }
+  const state = load();
+  let overrides = {}; // { moduleId: {cols, rows} }，換目標尺寸就清掉
+  let editingId = null;
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ target: state.target, modules: state.modules })); } catch (e) {} };
+
+  /* ---- 計算（跟報價單系統的尺寸計算小工具一樣） ---- */
+  const round2 = n => Math.round(n * 100) / 100;
+  function tile(m) {
+    const W = Number(state.target.w) || 0, H = Number(state.target.h) || 0;
+    if (!m.widthMm || !m.heightMm) return null;
+    const ov = overrides[m.id] || {};
+    const cols = ov.cols != null ? ov.cols : Math.max(1, Math.round((W * 10) / m.widthMm));
+    const rows = ov.rows != null ? ov.rows : Math.max(1, Math.round((H * 10) / m.heightMm));
+    const aw = round2((cols * m.widthMm) / 10), ah = round2((rows * m.heightMm) / 10);
+    return {
+      cols, rows, total: cols * rows, aw, ah,
+      inch: Math.round(Math.sqrt(aw * aw + ah * ah) / 2.54),
+      ratio: ah ? Math.floor((aw / ah) * 1000 + 1e-9) / 1000 : 0,
+      dw: round2(aw - W), dh: round2(ah - H)
+    };
+  }
+  const sign = n => (n > 0 ? '+' : '') + n;
+  const cls = n => (n > 0 ? 'plus' : n < 0 ? 'minus' : '');
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  let toastTimer;
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.className = 'show';
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.className = ''; }, 2200);
+  }
+
+  function resultText(m, r) {
+    return [
+      `目標尺寸：${state.target.w} x ${state.target.h} cm`,
+      `${m.name}（${m.widthMm} x ${m.heightMm} mm）`,
+      `寬 ${r.cols} 塊 x 高 ${r.rows} 塊，共 ${r.total} 塊`,
+      `實際尺寸：${r.aw} x ${r.ah} cm（${r.inch}吋）`,
+      `顯示比例：${r.ratio.toFixed(3)}`,
+      `與目標差異：寬 ${sign(r.dw)} cm，高 ${sign(r.dh)} cm`
+    ].join('\n');
+  }
+
+  /* ---- 畫面 ---- */
+  const cardsEl = document.getElementById('cards');
+
+  function render() {
+    cardsEl.innerHTML = state.modules.map(m => m.id === editingId ? editHtml(m) : cardHtml(m)).join('')
+      || '<div class="card" style="color:var(--muted)">還沒有模組，按下面「新增模組」。</div>';
+    state.modules.forEach(m => { if (m.id !== editingId) updateCard(m); });
+  }
+
+  function cardHtml(m) {
+    return `<div class="card" data-id="${m.id}">
+      <div class="card-head">
+        <div><span class="name">${esc(m.name) || '(未命名)'}</span><span class="dim">${m.widthMm} × ${m.heightMm} mm</span></div>
+        <button class="link" data-act="edit">編輯</button>
+      </div>
+      <div class="counts">
+        <div><label>寬(橫向塊數)</label><div class="stepper">
+          <button data-act="dec" data-k="cols" aria-label="寬減一">−</button>
+          <input data-k="cols" type="number" inputmode="numeric" min="1">
+          <button data-act="inc" data-k="cols" aria-label="寬加一">＋</button></div></div>
+        <div><label>高(直向塊數)</label><div class="stepper">
+          <button data-act="dec" data-k="rows" aria-label="高減一">−</button>
+          <input data-k="rows" type="number" inputmode="numeric" min="1">
+          <button data-act="inc" data-k="rows" aria-label="高加一">＋</button></div></div>
+      </div>
+      <div class="manual" hidden>已手動調整 <button class="link" data-act="auto">改回自動</button></div>
+      <dl class="res">
+        <dt>共需</dt><dd class="big" data-r="total"></dd>
+        <dt>實際尺寸</dt><dd class="big" data-r="size"></dd>
+        <dt>吋</dt><dd data-r="inch"></dd>
+        <dt>顯示比例</dt><dd data-r="ratio"></dd>
+        <dt>與目標差異</dt><dd data-r="diff"></dd>
+      </dl>
+      <div class="actions">
+        <button class="btn" data-act="copy">複製結果</button>
+        ${navigator.share ? '<button class="btn ghost" data-act="share">分享</button>' : ''}
+      </div>
+    </div>`;
+  }
+
+  function editHtml(m) {
+    return `<div class="card" data-id="${m.id}">
+      <div class="edit">
+        <div class="full"><label>模組名稱</label><input data-e="name" value="${esc(m.name)}"></div>
+        <div><label>模組寬 (mm)</label><input data-e="widthMm" type="number" inputmode="decimal" value="${m.widthMm || ''}"></div>
+        <div><label>模組高 (mm)</label><input data-e="heightMm" type="number" inputmode="decimal" value="${m.heightMm || ''}"></div>
+      </div>
+      <div class="actions">
+        <button class="btn" data-act="save">儲存</button>
+        <button class="btn ghost" data-act="cancel">取消</button>
+        <button class="btn danger" data-act="del">刪除</button>
+      </div>
+    </div>`;
+  }
+
+  // 只更新數字，不重畫輸入框，打字時游標不會跳掉
+  function updateCard(m) {
+    const card = cardsEl.querySelector(`.card[data-id="${m.id}"]`);
+    if (!card) return;
+    const r = tile(m);
+    const set = (k, html) => { card.querySelector(`[data-r="${k}"]`).innerHTML = html; };
+    ['cols', 'rows'].forEach(k => {
+      const inp = card.querySelector(`input[data-k="${k}"]`);
+      if (document.activeElement !== inp) inp.value = r ? r[k] : '';
+    });
+    card.querySelector('.manual').hidden = !overrides[m.id];
+    if (!r) { ['total', 'size', 'inch', 'ratio', 'diff'].forEach(k => set(k, '—')); return; }
+    set('total', `${r.total} 塊`);
+    set('size', `${r.aw} × ${r.ah} cm`);
+    set('inch', `${r.inch} 吋`);
+    set('ratio', r.ratio.toFixed(3));
+    set('diff', `寬 <span class="${cls(r.dw)}">${sign(r.dw)}</span>，高 <span class="${cls(r.dh)}">${sign(r.dh)}</span> cm`);
+  }
+  const updateAll = () => state.modules.forEach(m => { if (m.id !== editingId) updateCard(m); });
+
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch (e2) {}
+      ta.remove(); return ok;
+    }
+  }
+
+  /* ---- 事件 ---- */
+  const tw = document.getElementById('tw'), th = document.getElementById('th');
+  tw.value = state.target.w; th.value = state.target.h;
+  [[tw, 'w'], [th, 'h']].forEach(([el, k]) => el.addEventListener('input', () => {
+    state.target[k] = el.value === '' ? '' : Number(el.value);
+    overrides = {}; save(); updateAll();
+  }));
+
+  cardsEl.addEventListener('input', e => {
+    const k = e.target.dataset.k;
+    if (!k) return;
+    const card = e.target.closest('.card'); const id = card.dataset.id;
+    const v = parseInt(e.target.value, 10);
+    if (!(v >= 1)) return;
+    const m = state.modules.find(x => x.id === id); const r = tile(m);
+    overrides[id] = { cols: r.cols, rows: r.rows, [k]: v };
+    updateCard(m);
+  });
+  cardsEl.addEventListener('focusout', e => { // 輸入框留空或亂填，離開時補回目前數字
+    if (e.target.dataset && e.target.dataset.k) {
+      const m = state.modules.find(x => x.id === e.target.closest('.card').dataset.id);
+      setTimeout(() => updateCard(m), 0);
+    }
+  });
+
+  cardsEl.addEventListener('click', async e => {
+    const btn = e.target.closest('[data-act]');
+    if (!btn) return;
+    const card = btn.closest('.card'); const id = card.dataset.id;
+    const m = state.modules.find(x => x.id === id);
+    const act = btn.dataset.act;
+    if (act === 'inc' || act === 'dec') {
+      const r = tile(m); if (!r) return;
+      const k = btn.dataset.k;
+      const next = Math.max(1, r[k] + (act === 'inc' ? 1 : -1));
+      overrides[id] = { cols: r.cols, rows: r.rows, [k]: next };
+      updateCard(m);
+    } else if (act === 'auto') {
+      delete overrides[id]; updateCard(m);
+    } else if (act === 'copy') {
+      const r = tile(m); if (!r) return;
+      toast(await copyText(resultText(m, r)) ? '已複製，可以貼到 LINE' : '複製失敗，請手動選取');
+    } else if (act === 'share') {
+      const r = tile(m); if (!r) return;
+      try { await navigator.share({ text: resultText(m, r) }); } catch (err) {}
+    } else if (act === 'edit') {
+      editingId = id; render();
+    } else if (act === 'cancel') {
+      if (!m.widthMm && !m.heightMm && !m.name) state.modules = state.modules.filter(x => x.id !== id);
+      editingId = null; save(); render();
+    } else if (act === 'save') {
+      const val = k => card.querySelector(`[data-e="${k}"]`).value;
+      const w = Number(val('widthMm')), h = Number(val('heightMm'));
+      if (!(w > 0 && h > 0)) { toast('請填模組寬、高 (mm)'); return; }
+      m.name = val('name').trim() || '未命名模組'; m.widthMm = w; m.heightMm = h;
+      delete overrides[id]; editingId = null; save(); render();
+    } else if (act === 'del') {
+      if (!confirm(`確定刪除「${m.name || '這個模組'}」嗎？`)) return;
+      state.modules = state.modules.filter(x => x.id !== id);
+      editingId = null; save(); render();
+    }
+  });
+
+  document.getElementById('add').addEventListener('click', () => {
+    const m = { id: 'm' + Date.now().toString(36), name: '', widthMm: 0, heightMm: 0 };
+    state.modules.push(m); editingId = m.id; render();
+    const card = cardsEl.querySelector(`.card[data-id="${m.id}"]`);
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.querySelector('[data-e="name"]').focus();
+  });
+  document.getElementById('reset').addEventListener('click', () => {
+    if (!confirm('恢復成預設模組？你自己新增或修改的模組會被清掉。')) return;
+    state.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES)); overrides = {}; editingId = null; save(); render();
+  });
+
+  render();
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
