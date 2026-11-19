@@ -1,5 +1,5 @@
 // 離線用：有網路時抓最新版並更新快取，沒網路時用快取
-const CACHE = 'ledsize-v1';
+const CACHE = 'ledsize-v2';
 const FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {

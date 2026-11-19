@@ -118,15 +118,21 @@
 <script>
 (() => {
   const DEFAULT_MODULES = [
-    { id: 'm1', name: '模組A', widthMm: 600, heightMm: 337.5 },
-    { id: 'm2', name: '模組B', widthMm: 320, heightMm: 360 }
+    { id: 'm1', name: 'COB', widthMm: 600, heightMm: 320 },
+    { id: 'm2', name: 'SMD/GOB', widthMm: 600, heightMm: 337.5 }
   ];
+  // 舊版預設模組(模組A/模組B)沒被改過的話，自動換成新預設
+  const OLD_DEFAULT_SIG = 'm1|模組A|600|337.5,m2|模組B|320|360';
+  const modSig = list => (list || []).map(m => [m.id, m.name, m.widthMm, m.heightMm].join('|')).join(',');
   const KEY = 'ledsize_v1';
 
   function load() {
     try {
       const d = JSON.parse(localStorage.getItem(KEY));
-      if (d && Array.isArray(d.modules)) return d;
+      if (d && Array.isArray(d.modules)) {
+        if (modSig(d.modules) === OLD_DEFAULT_SIG) d.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
+        return d;
+      }
     } catch (e) {}
     return { target: { w: 288, h: 160 }, modules: JSON.parse(JSON.stringify(DEFAULT_MODULES)) };
   }
