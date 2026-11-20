@@ -139,7 +139,13 @@
     { id: 'm2', name: 'EDS_SMD/GOB', widthMm: 320, heightMm: 160 }
   ];
   const DEFAULT_TARGET = { w: 320, h: 192 };
-  const PITCHES = [0.9, 1.25, 1.53, 1.56, 1.86, 2, 2.5, 3, 4, 5];
+  // 每個模組的「常用」間距選單；自己新增的模組用全部選項
+  const PITCH_BY_NAME = {
+    'STVII_COB': [0.7, 0.9, 1.25, 1.56],
+    'EDS_SMD/GOB': [1.25, 1.53, 1.56, 1.86, 2, 2.5]
+  };
+  const ALL_PITCHES = [0.7, 0.9, 1.25, 1.53, 1.56, 1.86, 2, 2.5];
+  const pitchesFor = m => PITCH_BY_NAME[m.name] || ALL_PITCHES;
   // 舊版的預設模組沒被改過的話，自動換成新預設
   const OLD_DEFAULT_SIGS = ['m1|模組A|600|337.5,m2|模組B|320|360', 'm1|COB|600|320,m2|SMD/GOB|600|337.5'];
   const modSig = list => (list || []).map(m => [m.id, m.name, m.widthMm, m.heightMm].join('|')).join(',');
@@ -231,7 +237,7 @@
       <div class="pitch-row"><label>間距</label>
         <div class="pbox"><span>P</span><input data-p="1" type="number" inputmode="decimal" step="0.01" placeholder="1.86" value="${m.pitch || ''}"></div>
         <span class="unit">mm</span>
-        <select class="pick" data-ps="1" aria-label="選常用間距"><option value="">常用</option>${PITCHES.map(v => `<option value="${v}">P${v}</option>`).join('')}</select></div>
+        <select class="pick" data-ps="1" aria-label="選常用間距"><option value="">常用</option>${pitchesFor(m).map(v => `<option value="${v}">P${v}</option>`).join('')}</select></div>
       <div class="manual" hidden>已手動調整 <button class="link" data-act="auto">改回自動</button></div>
       <dl class="res">
         <dt>共需</dt><dd class="big" data-r="total"></dd>
