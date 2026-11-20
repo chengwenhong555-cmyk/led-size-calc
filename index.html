@@ -73,6 +73,10 @@
   .pitch-row input:focus { outline: none; }
   .pitch-row .pbox:focus-within { border-color: var(--accent); }
   .pitch-row .unit { font-size: 13px; color: var(--muted); font-weight: 700; }
+  .pitch-row .pick {
+    margin-left: auto; font-family: inherit; font-size: 14px; font-weight: 700; color: var(--navy);
+    background: #eef2f8; border: 1.5px solid var(--border); border-radius: 10px; padding: 8px 6px; cursor: pointer;
+  }
   .manual { font-size: 12px; color: #b45309; font-weight: 700; margin: -4px 0 8px; display: flex; gap: 8px; align-items: center; }
   .manual[hidden] { display: none; }
 
@@ -121,15 +125,11 @@
   <div class="note">
     <b>使用方式</b>：填目標寬高，每個模組會自動算出最接近的塊數。寬(橫向塊數)、高(直向塊數)可以用 −／＋ 或直接輸入改成你要的數字，其他數字會跟著重算。<br>
     <b>顯示比例</b>＝寬÷高，取小數三位（第四位起捨去），例如顯示尺寸 16:9 為 <b>1.777</b>。<br>
-    <b>解析度</b>＝實際尺寸÷間距（四捨五入），每個模組的間距會記住。<br>
+    <b>解析度</b>＝實際尺寸÷間距（四捨五入），可以直接輸入，或按「常用」選，每個模組的間距會記住。<br>
     模組清單可自行新增／修改，資料只存在這支手機或這台電腦。
     <button class="link" id="reset">恢復預設模組</button>
   </div>
 </main>
-<datalist id="pitch-list">
-  <option value="0.9"><option value="1.25"><option value="1.53"><option value="1.56"><option value="1.86">
-  <option value="2"><option value="2.5"><option value="3"><option value="4"><option value="5">
-</datalist>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -139,6 +139,7 @@
     { id: 'm2', name: 'EDS_SMD/GOB', widthMm: 320, heightMm: 160 }
   ];
   const DEFAULT_TARGET = { w: 320, h: 192 };
+  const PITCHES = [0.9, 1.25, 1.53, 1.56, 1.86, 2, 2.5, 3, 4, 5];
   // 舊版的預設模組沒被改過的話，自動換成新預設
   const OLD_DEFAULT_SIGS = ['m1|模組A|600|337.5,m2|模組B|320|360', 'm1|COB|600|320,m2|SMD/GOB|600|337.5'];
   const modSig = list => (list || []).map(m => [m.id, m.name, m.widthMm, m.heightMm].join('|')).join(',');
@@ -228,8 +229,9 @@
           <button data-act="inc" data-k="rows" aria-label="高加一">＋</button></div></div>
       </div>
       <div class="pitch-row"><label>間距</label>
-        <div class="pbox"><span>P</span><input data-p="1" type="number" inputmode="decimal" step="0.01" list="pitch-list" placeholder="1.86" value="${m.pitch || ''}"></div>
-        <span class="unit">mm</span></div>
+        <div class="pbox"><span>P</span><input data-p="1" type="number" inputmode="decimal" step="0.01" placeholder="1.86" value="${m.pitch || ''}"></div>
+        <span class="unit">mm</span>
+        <select class="pick" data-ps="1" aria-label="選常用間距"><option value="">常用</option>${PITCHES.map(v => `<option value="${v}">P${v}</option>`).join('')}</select></div>
       <div class="manual" hidden>已手動調整 <button class="link" data-act="auto">改回自動</button></div>
       <dl class="res">
         <dt>共需</dt><dd class="big" data-r="total"></dd>
@@ -300,6 +302,15 @@
     overrides = {}; save(); updateAll();
   }));
 
+  cardsEl.addEventListener('change', e => {
+    if (!e.target.dataset.ps || !e.target.value) return;
+    const card = e.target.closest('.card');
+    const m = state.modules.find(x => x.id === card.dataset.id);
+    m.pitch = Number(e.target.value);
+    card.querySelector('input[data-p]').value = m.pitch;
+    e.target.value = '';
+    save(); updateCard(m);
+  });
   cardsEl.addEventListener('input', e => {
     if (e.target.dataset.p) {
       const m = state.modules.find(x => x.id === e.target.closest('.card').dataset.id);
