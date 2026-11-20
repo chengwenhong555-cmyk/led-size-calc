@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#1F3864">
+<meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="尺寸計算">
 <title>LED電視牆尺寸計算</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -24,10 +24,12 @@
     background: var(--bg); color: var(--text); font-size: 16px;
   }
   header {
-    background: var(--navy); color: #fff; position: sticky; top: 0; z-index: 5;
-    padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+    background: #fff; position: sticky; top: 0; z-index: 5; border-bottom: 3px solid var(--navy);
+    padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
   }
-  header h1 { margin: 0; font-size: 19px; font-weight: 800; letter-spacing: .5px; }
+  .head-in { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  header img { height: 36px; width: auto; display: block; flex-shrink: 0; }
+  header h1 { margin: 0; font-size: 18px; font-weight: 800; color: var(--navy); letter-spacing: .5px; line-height: 1.2; }
   main { max-width: 1100px; margin: 0 auto; padding: 14px 16px calc(env(safe-area-inset-bottom) + 28px); }
 
   .target {
@@ -96,7 +98,7 @@
 </style>
 </head>
 <body>
-<header><h1>LED 電視牆尺寸計算</h1></header>
+<header><div class="head-in"><img src="logo.png" alt="晶彩亞太科技 SPLENDITECH"><h1>LED 電視牆尺寸計算</h1></div></header>
 <main>
   <section class="target">
     <div><label for="tw">目標寬 (cm)</label><input id="tw" type="number" inputmode="decimal"></div>
@@ -118,11 +120,12 @@
 <script>
 (() => {
   const DEFAULT_MODULES = [
-    { id: 'm1', name: 'COB', widthMm: 600, heightMm: 320 },
-    { id: 'm2', name: 'SMD/GOB', widthMm: 600, heightMm: 337.5 }
+    { id: 'm1', name: 'STVII_COB', widthMm: 600, heightMm: 337.5 },
+    { id: 'm2', name: 'EDS_SMD/GOB', widthMm: 320, heightMm: 160 }
   ];
-  // 舊版預設模組(模組A/模組B)沒被改過的話，自動換成新預設
-  const OLD_DEFAULT_SIG = 'm1|模組A|600|337.5,m2|模組B|320|360';
+  const DEFAULT_TARGET = { w: 320, h: 192 };
+  // 舊版的預設模組沒被改過的話，自動換成新預設
+  const OLD_DEFAULT_SIGS = ['m1|模組A|600|337.5,m2|模組B|320|360', 'm1|COB|600|320,m2|SMD/GOB|600|337.5'];
   const modSig = list => (list || []).map(m => [m.id, m.name, m.widthMm, m.heightMm].join('|')).join(',');
   const KEY = 'ledsize_v1';
 
@@ -130,11 +133,11 @@
     try {
       const d = JSON.parse(localStorage.getItem(KEY));
       if (d && Array.isArray(d.modules)) {
-        if (modSig(d.modules) === OLD_DEFAULT_SIG) d.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
+        if (OLD_DEFAULT_SIGS.includes(modSig(d.modules))) d.modules = JSON.parse(JSON.stringify(DEFAULT_MODULES));
         return d;
       }
     } catch (e) {}
-    return { target: { w: 288, h: 160 }, modules: JSON.parse(JSON.stringify(DEFAULT_MODULES)) };
+    return { target: Object.assign({}, DEFAULT_TARGET), modules: JSON.parse(JSON.stringify(DEFAULT_MODULES)) };
   }
   const state = load();
   let overrides = {}; // { moduleId: {cols, rows} }，換目標尺寸就清掉
