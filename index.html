@@ -67,7 +67,9 @@
   .pitch-row label { font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap; }
   .pitch-row .pbox { display: flex; align-items: center; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
   .pitch-row .pbox span { padding: 0 8px 0 12px; font-size: 18px; font-weight: 800; color: var(--navy); }
-  .pitch-row input { width: 92px; border: none; font-size: 18px; font-weight: 800; padding: 8px 8px 8px 0; font-family: inherit; }
+  .pitch-row input { width: 120px; border: none; font-size: 18px; font-weight: 800; padding: 8px 8px 8px 0; font-family: inherit; -moz-appearance: textfield; }
+  .pitch-row input::-webkit-inner-spin-button, .pitch-row input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .pitch-row input::placeholder { font-weight: 600; color: #9ca3af; }
   .pitch-row input:focus { outline: none; }
   .pitch-row .pbox:focus-within { border-color: var(--accent); }
   .pitch-row .unit { font-size: 13px; color: var(--muted); font-weight: 700; }
@@ -226,7 +228,7 @@
           <button data-act="inc" data-k="rows" aria-label="高加一">＋</button></div></div>
       </div>
       <div class="pitch-row"><label>間距</label>
-        <div class="pbox"><span>P</span><input data-p="1" type="number" inputmode="decimal" step="0.01" list="pitch-list" placeholder="例 1.86" value="${m.pitch || ''}"></div>
+        <div class="pbox"><span>P</span><input data-p="1" type="number" inputmode="decimal" step="0.01" list="pitch-list" placeholder="1.86" value="${m.pitch || ''}"></div>
         <span class="unit">mm</span></div>
       <div class="manual" hidden>已手動調整 <button class="link" data-act="auto">改回自動</button></div>
       <dl class="res">
